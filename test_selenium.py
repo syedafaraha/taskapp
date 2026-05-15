@@ -273,7 +273,7 @@ class TestStatsCounter:
         input_field.clear()
         input_field.send_keys("Stats Check Task")
         input_field.send_keys(Keys.RETURN)
-        time.sleep(0.5)
+        time.sleep(1.5)
 
         driver.get(BASE_URL)
         stats = driver.find_element(By.CLASS_NAME, "stats")
