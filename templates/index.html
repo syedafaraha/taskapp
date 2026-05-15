@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TaskFlow</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0d0f14;
+      --surface:  #161a23;
+      --border:   #252a38;
+      --accent:   #6ee7b7;
+      --accent2:  #818cf8;
+      --danger:   #f87171;
+      --text:     #e2e8f0;
+      --muted:    #64748b;
+      --done:     #334155;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3rem 1rem 5rem;
+    }
+
+    /* ── background glow ── */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -200px; left: 50%;
+      transform: translateX(-50%);
+      width: 700px; height: 500px;
+      background: radial-gradient(ellipse, rgba(110,231,183,.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* ── header ── */
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      animation: fadeDown .6s ease both;
+    }
+    header h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.2rem, 6vw, 3.2rem);
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    header p {
+      color: var(--muted);
+      font-size: .95rem;
+      margin-top: .4rem;
+    }
+
+    /* ── card ── */
+    .card {
+      width: 100%;
+      max-width: 620px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+      animation: fadeUp .5s ease both;
+    }
+
+    /* ── add form ── */
+    .add-form {
+      display: flex;
+      gap: .75rem;
+      margin-bottom: 2rem;
+    }
+    .add-form input[type="text"] {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: .75rem 1rem;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .95rem;
+      outline: none;
+      transition: border-color .2s;
+      id: task-input;
+    }
+    .add-form input[type="text"]:focus { border-color: var(--accent); }
+    .add-form input[type="text"]::placeholder { color: var(--muted); }
+    .add-form button {
+      background: var(--accent);
+      color: #0d0f14;
+      border: none;
+      border-radius: 10px;
+      padding: .75rem 1.4rem;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: .9rem;
+      cursor: pointer;
+      transition: opacity .2s, transform .15s;
+      white-space: nowrap;
+    }
+    .add-form button:hover { opacity: .85; transform: translateY(-1px); }
+
+    /* ── stats bar ── */
+    .stats {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .stat { display: flex; flex-direction: column; }
+    .stat span:first-child {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat span:last-child { font-size: .78rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+
+    /* ── task list ── */
+    .task-list { display: flex; flex-direction: column; gap: .6rem; }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: .9rem;
+      padding: .85rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      transition: border-color .2s, opacity .3s;
+      animation: fadeUp .3s ease both;
+    }
+    .task-item:hover { border-color: #2d3447; }
+    .task-item.done { opacity: .5; }
+
+    /* checkbox toggle */
+    .task-item form.toggle button {
+      width: 22px; height: 22px;
+      border-radius: 6px;
+      border: 2px solid var(--border);
+      background: transparent;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: background .2s, border-color .2s;
+      color: var(--bg);
+      font-size: 13px;
+    }
+    .task-item.done form.toggle button {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .task-item form.toggle button:hover { border-color: var(--accent); }
+
+    .task-title {
+      flex: 1;
+      font-size: .95rem;
+      color: var(--text);
+      word-break: break-word;
+    }
+    .task-item.done .task-title {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+
+    .task-date { font-size: .75rem; color: var(--muted); white-space: nowrap; }
+
+    /* delete */
+    .task-item form.delete button {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 2px 4px;
+      border-radius: 6px;
+      transition: color .2s, background .2s;
+      line-height: 1;
+    }
+    .task-item form.delete button:hover { color: var(--danger); background: rgba(248,113,113,.1); }
+
+    /* ── empty state ── */
+    .empty {
+      text-align: center;
+      padding: 2.5rem 0 1rem;
+      color: var(--muted);
+    }
+    .empty .icon { font-size: 2.5rem; margin-bottom: .75rem; }
+    .empty p { font-size: .9rem; }
+
+    /* ── animations ── */
+    @keyframes fadeDown { from { opacity:0; transform:translateY(-18px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes fadeUp   { from { opacity:0; transform:translateY(14px);  } to { opacity:1; transform:translateY(0); } }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>TaskFlow</h1>
+    <p>A simple task manager — powered by Flask &amp; SQLite</p>
+  </header>
+
+  <div class="card">
+
+    <!-- Add Task Form -->
+    <form class="add-form" action="/add" method="POST">
+      <input type="text" name="title" id="task-input"
+             placeholder="Add a new task…" autocomplete="off" required />
+      <button type="submit">+ Add</button>
+    </form>
+
+    <!-- Stats -->
+    {% set total = tasks|length %}
+    {% set done  = tasks|selectattr('completed')|list|length %}
+    <div class="stats">
+      <div class="stat">
+        <span>{{ total }}</span><span>Total</span>
+      </div>
+      <div class="stat">
+        <span>{{ done }}</span><span>Done</span>
+      </div>
+      <div class="stat">
+        <span>{{ total - done }}</span><span>Pending</span>
+      </div>
+    </div>
+
+    <!-- Task List -->
+    <div class="task-list" id="task-list">
+      {% if tasks %}
+        {% for task in tasks %}
+        <div class="task-item {% if task.completed %}done{% endif %}" id="task-{{ task.id }}">
+
+          <!-- Toggle done -->
+          <form class="toggle" action="/toggle/{{ task.id }}" method="POST">
+            <button type="submit" title="Toggle complete">
+              {% if task.completed %}✓{% endif %}
+            </button>
+          </form>
+
+          <span class="task-title">{{ task.title }}</span>
+          <span class="task-date">{{ task.created_at.strftime('%b %d') }}</span>
+
+          <!-- Delete -->
+          <form class="delete" action="/delete/{{ task.id }}" method="POST">
+            <button type="submit" title="Delete task">✕</button>
+          </form>
+
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty">
+          <div class="icon">📋</div>
+          <p>No tasks yet. Add one above!</p>
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+
+</body>
+</html>

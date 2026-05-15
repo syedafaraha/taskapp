@@ -1,0 +1,26 @@
+# ── Dockerfile.selenium ─────────────────────────────────────
+# This image runs the Selenium test suite against the running app container.
+FROM python:3.11-slim
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# Install Chrome + ChromeDriver
+RUN apt-get update && apt-get install -y \
+    chromium \
+    chromium-driver \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV CHROME_BIN=/usr/bin/chromium \
+    CHROMEDRIVER_PATH=/usr/bin/chromedriver
+
+# Install Python test dependencies
+RUN pip install --no-cache-dir flask flask-sqlalchemy pytest selenium
+
+# Copy only the test file
+COPY test_selenium.py .
+
+# Run Selenium tests (BASE_URL can be overridden at runtime)
+CMD ["python", "-m", "pytest", "test_selenium.py", "-v", "--tb=short"]

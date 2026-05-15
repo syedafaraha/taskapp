@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+
+  # ── Flask Web App ──────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: taskflow-app
+    ports:
+      - "5000:5000"
+    volumes:
+      - db_data:/app/instance     # persist SQLite database
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Selenium Tests ─────────────────────────────────────────
+  selenium-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.selenium
+    container_name: taskflow-selenium
+    environment:
+      - BASE_URL=http://app:5000   # points to the app container
+    depends_on:
+      app:
+        condition: service_healthy  # wait until app is ready
+
+volumes:
+  db_data:
