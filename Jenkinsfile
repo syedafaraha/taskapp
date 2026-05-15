@@ -14,7 +14,7 @@ pipeline {
 
         stage('Code Build') {
             steps {
-                echo '>>> [Stage 1] Installing Python dependencies inside Docker...'
+                echo '>>> [Stage 1] Installing Python dependencies...'
                 sh '''
                     docker run --rm \
                         -v "$(pwd)":/app \
@@ -31,11 +31,16 @@ pipeline {
                 echo '>>> [Stage 2] Running unit tests inside Docker...'
                 sh '''
                     mkdir -p reports
+                    cat > /tmp/run_tests.sh << SCRIPT
+pip install flask flask-sqlalchemy pytest --quiet
+python -m pytest test_app.py -v --tb=short --junitxml=/app/reports/unit-test-results.xml
+SCRIPT
                     docker run --rm \
                         -v "$(pwd)":/app \
+                        -v /tmp/run_tests.sh:/run_tests.sh \
                         -w /app \
                         python:3.11-slim \
-                        sh -c "pip install flask flask-sqlalchemy pytest --quiet && python -m pytest test_app.py -v --tb=short --junitxml=/app/reports/unit-test-results.xml"
+                        sh /run_tests.sh
                 '''
                 echo '>>> Unit tests passed.'
             }
