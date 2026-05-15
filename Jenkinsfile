@@ -12,7 +12,6 @@ pipeline {
 
     stages {
 
-        // ── Stage 1: Code Build ──────────────────────────────────────
         stage('Code Build') {
             steps {
                 echo '>>> [Stage 1] Installing Python dependencies inside Docker...'
@@ -27,7 +26,6 @@ pipeline {
             }
         }
 
-        // ── Stage 2: Unit Testing ────────────────────────────────────
         stage('Unit Testing') {
             steps {
                 echo '>>> [Stage 2] Running unit tests inside Docker...'
@@ -37,9 +35,7 @@ pipeline {
                         -v "$(pwd)":/app \
                         -w /app \
                         python:3.11-slim \
-                        sh -c "pip install flask flask-sqlalchemy pytest --quiet && \
-                               python -m pytest test_app.py -v --tb=short \
-                               --junitxml=/app/reports/unit-test-results.xml"
+                        sh -c "pip install flask flask-sqlalchemy pytest --quiet && python -m pytest test_app.py -v --tb=short --junitxml=/app/reports/unit-test-results.xml"
                 '''
                 echo '>>> Unit tests passed.'
             }
@@ -51,7 +47,6 @@ pipeline {
             }
         }
 
-        // ── Stage 3: Containerized Deployment ────────────────────────
         stage('Containerized Deployment') {
             steps {
                 echo '>>> [Stage 3] Building and deploying app Docker container...'
@@ -84,7 +79,6 @@ pipeline {
             }
         }
 
-        // ── Stage 4: Containerized Selenium Testing ───────────────────
         stage('Containerized Selenium Testing') {
             steps {
                 echo '>>> [Stage 4] Running Selenium tests...'
